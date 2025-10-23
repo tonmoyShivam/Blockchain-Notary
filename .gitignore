@@ -1,0 +1,27 @@
+notepad .gitignore
+```
+
+Click "Yes" to create.
+
+**Paste this:**
+```
+# Configuration files with sensitive data
+Config.txt
+config.txt
+*.private
+
+# Private keys
+*private_key*
+*.key
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

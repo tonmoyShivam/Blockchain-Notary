@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Notary System</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/src/sha256.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .config-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .config-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .tabs {
+            display: none;
+        }
+
+        .tabs.active {
+            display: block;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .main-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .result-item strong {
+            color: #667eea;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Blockchain Notary System</h1>
+            <p>Document Notarization on Ganache Blockchain</p>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="config-section" id="configSection">
+            <h2>⚙️ Configuration</h2>
+            <div class="form-group">
+                <label>Ganache RPC URL:</label>
+                <input type="text" id="rpcUrl" value="http://127.0.0.1:7545" placeholder="http://127.0.0.1:7545">
+            </div>
+            <div class="form-group">
+                <label>Contract Address:</label>
+                <input type="text" id="contractAddress" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label>Your Wallet Address:</label>
+                <input type="text" id="walletAddress" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label>Private Key:</label>
+                <input type="password" id="privateKey" placeholder="0x...">
+            </div>
+            <button class="btn btn-primary" onclick="connectToBlockchain()">Connect to Blockchain</button>
+            <div id="connectionStatus"></div>
+        </div>
+
+        <!-- Main Interface -->
+        <div class="main-section hidden" id="mainSection">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('notarize')">📝 Notarize Document</button>
+                <button class="tab-btn" onclick="switchTab('verify')">🔍 Verify Document</button>
+            </div>
+
+            <!-- Notarize Tab -->
+            <div class="tabs active" id="notarizeTab">
+                <h2>📝 Notarize Document</h2>
+                <div class="form-group">
+                    <label>Document Content:</label>
+                    <textarea id="notarizeContent" placeholder="Enter document content here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <input type="text" id="notarizeDesc" placeholder="e.g., Contract Agreement 2024">
+                </div>
+                <button class="btn btn-success" onclick="notarizeDocument()">Notarize Document</button>
+                <div id="notarizeResult"></div>
+            </div>
+
+            <!-- Verify Tab -->
+            <div class="tabs" id="verifyTab">
+                <h2>🔍 Verify Document</h2>
+                <div class="form-group">
+                    <label>Document Content:</label>
+                    <textarea id="verifyContent" placeholder="Enter document content to verify..."></textarea>
+                </div>
+                <button class="btn btn-info" onclick="verifyDocument()">Verify Document</button>
+                <div id="verifyResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Contract ABI
+        const CONTRACT_ABI = [
+            {
+                "inputs": [
+                    {"internalType": "bytes32", "name": "_documentHash", "type": "bytes32"},
+                    {"internalType": "string", "name": "_description", "type": "string"}
+                ],
+                "name": "notarizeDocument",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "bytes32", "name": "_documentHash", "type": "bytes32"}
+                ],
+                "name": "verifyDocument",
+                "outputs": [
+                    {"internalType": "bool", "name": "exists", "type": "bool"},
+                    {"internalType": "uint256", "name": "timestamp", "type": "uint256"},
+                    {"internalType": "address", "name": "owner", "type": "address"},
+                    {"internalType": "string", "name": "description", "type": "string"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let web3;
+        let contract;
+        let account;
+        let privateKey;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tabs').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'notarize') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('notarizeTab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('verifyTab').classList.add('active');
+            }
+        }
+
+        async function connectToBlockchain() {
+            const rpcUrl = document.getElementById('rpcUrl').value;
+            const contractAddress = document.getElementById('contractAddress').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+            privateKey = document.getElementById('privateKey').value;
+
+            const statusDiv = document.getElementById('connectionStatus');
+
+            if (!contractAddress || !walletAddress || !privateKey) {
+                statusDiv.innerHTML = '<div class="status error">❌ Please fill in all fields!</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="status info">⏳ Connecting to blockchain...</div>';
+
+            try {
+                web3 = new Web3(new Web3.providers.HttpProvider(rpcUrl));
+                
+                const connected = await web3.eth.net.isListening();
+                if (!connected) {
+                    throw new Error('Cannot connect to Ganache. Make sure it is running!');
+                }
+
+                contract = new web3.eth.Contract(CONTRACT_ABI, contractAddress);
+                account = walletAddress;
+
+                statusDiv.innerHTML = '<div class="status success">✅ Connected successfully!</div>';
+                document.getElementById('configSection').style.display = 'none';
+                document.getElementById('mainSection').classList.remove('hidden');
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Connection failed: ${error.message}</div>`;
+            }
+        }
+
+        function calculateHash(content) {
+            return sha256(content);
+        }
+
+        async function notarizeDocument() {
+            const content = document.getElementById('notarizeContent').value;
+            const description = document.getElementById('notarizeDesc').value || 'No description';
+            const resultDiv = document.getElementById('notarizeResult');
+
+            if (!content) {
+                resultDiv.innerHTML = '<div class="status error">❌ Content cannot be empty!</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="status info">⏳ Notarizing document...</div>';
+
+            try {
+                const docHash = '0x' + calculateHash(content);
+                
+                const tx = contract.methods.notarizeDocument(docHash, description);
+                const gas = await tx.estimateGas({from: account});
+                const gasPrice = await web3.eth.getGasPrice();
+                
+                const txData = {
+                    from: account,
+                    to: contract.options.address,
+                    data: tx.encodeABI(),
+                    gas: gas,
+                    gasPrice: gasPrice
+                };
+
+                const signedTx = await web3.eth.accounts.signTransaction(txData, privateKey);
+                const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>✅ Document Notarized Successfully!</h3>
+                        <div class="result-item"><strong>📄 Document Hash:</strong> ${docHash}</div>
+                        <div class="result-item"><strong>🔗 TX Hash:</strong> ${receipt.transactionHash}</div>
+                        <div class="result-item"><strong>📦 Block Number:</strong> ${receipt.blockNumber}</div>
+                        <div class="result-item"><strong>⛽ Gas Used:</strong> ${receipt.gasUsed}</div>
+                        <div class="result-item"><strong>📝 Description:</strong> ${description}</div>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function verifyDocument() {
+            const content = document.getElementById('verifyContent').value;
+            const resultDiv = document.getElementById('verifyResult');
+
+            if (!content) {
+                resultDiv.innerHTML = '<div class="status error">❌ Content cannot be empty!</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="status info">🔍 Verifying document...</div>';
+
+            try {
+                const docHash = '0x' + calculateHash(content);
+                const result = await contract.methods.verifyDocument(docHash).call();
+
+                if (result[0]) {
+                    const timestamp = new Date(result[1] * 1000).toLocaleString();
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>✅ Document Found on Blockchain!</h3>
+                            <div class="result-item"><strong>📄 Document Hash:</strong> ${docHash}</div>
+                            <div class="result-item"><strong>📅 Timestamp:</strong> ${timestamp}</div>
+                            <div class="result-item"><strong>👤 Owner:</strong> ${result[2]}</div>
+                            <div class="result-item"><strong>📝 Description:</strong> ${result[3]}</div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>❌ Document NOT Found</h3>
+                            <div class="result-item"><strong>📄 Calculated Hash:</strong> ${docHash}</div>
+                            <p>This document has not been notarized on the blockchain.</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
