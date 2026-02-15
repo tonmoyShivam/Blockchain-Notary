@@ -288,37 +288,9 @@ Verify document was successfully notarized
 
 &nbsp;Email notifications
 
-📄 License
-
-This project is open source and available for educational purposes.
-
-
-
-👤 Author
-
-Your Name
-
-
-
-GitHub: @yourusername
-
-🙏 Acknowledgments
-
-Remix IDE for development environment
-
-Ganache for local blockchain testing
-
-Web3.js for blockchain interaction
-
-Ethereum community for documentation
-
-📞 Contact
-
-For questions or suggestions, please open an issue on GitHub.
-
-
 
 Made with ❤️ using Blockchain Technology
+
 
 
 
